@@ -175,7 +175,7 @@ get.linkedin.access.token <- function(
 					Sys.time() + as.numeric(httr::content(oAuthResponse)$expires_in)
 			)
 			if(dir.exists(dirname(apiKeyRdsPath))){
-				if(file.exists(apiKeyRdsPath){file.remove(apiKeyRdsPath)}
+				if(file.exists(apiKeyRdsPath)){file.remove(apiKeyRdsPath)}
 				saveRDS(token,apiKeyRdsPath)
 			}
 			return(unname(token["accessToken"]))
@@ -195,6 +195,8 @@ get.linkedin.access.token <- function(
 		)
 		return(NULL)
 	}
-  } else {
+  } else { 
+	#potentialToken is not expired
 	return(unname(potentialToken["accessToken"]))
+  }
 }
