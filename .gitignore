@@ -1,3 +1,7 @@
+# Secrets files
+apiToken.*
+apiClientIdSecret.*
+
 # History files
 .Rhistory
 .Rapp.history
