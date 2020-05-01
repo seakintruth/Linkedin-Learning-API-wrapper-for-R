@@ -13,7 +13,8 @@ pacman::p_load(httr,jsonlite,getPass,tcltk,curl)
 # or an .RDS file containing just that vector created with
 # saveRDS(apiClient,apiClientIdSecretPath)  
 #
-# If you use a secrets file or include the apiKeyRdsPath a API Key file will be added to the parent folder.
+# If you use a secrets file or include the apiKeyRdsPath a API Key file will be added to the 
+# parent folder for later re-use of the valid API key by this function
 
 get.linkedin.access.token <- function(
 	apiClientIdSecretPath="",
