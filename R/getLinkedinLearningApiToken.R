@@ -73,7 +73,7 @@ get.linkedin.access.token <- function(
 	}
 	return(apiClient)
 	rm("apiClient")
-    }  
+    }
 	# Documentation found at:
 	# https://docs.microsoft.com/en-us/linkedin/shared/authentication/client-credentials-flow?context=linkedin/context
 	# ---
@@ -158,9 +158,7 @@ get.linkedin.access.token <- function(
 		oauth_header <- "application/x-www-form-urlencoded"
 		names(oauth_header)<- "Content-Type"
 		httr::add_headers(oauth_header)
-
-		# after disconnecting to the Jacksonville VPN this works!
-		# may need to figure out how to use the internet explorer proxies info,
+		# [TODO] may need to figure out how to use the internet explorer proxies info,
 		# to get this to work behind a VPN...
 		oAuthResponse <- httr::POST(
 			url="https://www.linkedin.com/oauth/v2/accessToken",
@@ -191,7 +189,7 @@ get.linkedin.access.token <- function(
 	if (fCancel){
 		tcltk::tkmessageBox(
 			message=paste0("\nError: ",strCancelMsg ,"\n "),
-			title="LL AD Assistant"
+			title="Get Linkein API Access Token"
 		)
 		return(NULL)
 	}
