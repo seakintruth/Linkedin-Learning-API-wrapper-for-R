@@ -2,7 +2,7 @@
 Interactive API helper functions for Linkedin Learning 
 
 # Functions
-## [get.linkedin.access.token()|./R/getLinkedinLearningApiToken.R]
+[get.linkedin.access.token()|./R/getLinkedinLearningApiToken.R]
  Linked in learning API keys are valid for several months at a time, 
  so if we have one we don't need get a new one
 
