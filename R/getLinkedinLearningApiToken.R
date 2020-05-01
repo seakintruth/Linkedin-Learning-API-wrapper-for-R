@@ -19,22 +19,27 @@ get.linkedin.access.token <- function(
 	apiClientIdSecretPath="",
 	apiKeyRdsPath=""
 ){
-  .is.ApiKeyValid <- function(apiKeyRdsPath){
+  .getApiKeyIfValid <- function(apiKeyRdsPath){
 	if(
 		file.exists(apiKeyRdsPath) && 
-		tolower(tools::file_ext(apiClientIdSecretPath)) == ".rds"
+		tolower(tools::file_ext(apiKeyRdsPath)) == "rds"
 	){
 		token <- readRDS(apiKeyRdsPath)
-		if (unname(token["expiresIn"])){
-
-		}	
+		#Determin if the token has expired or will within a day
+		if (
+			as.numeric(unname(token["expiresIn"]))>
+			(as.numeric(Sys.time())+(60*60*24))
+		){
+			return(token)
+		} else {
+			return(NULL)
+		}
 	} else {
 		return(NULL)
 	}  
   }
-  if(.is.ApiKeyValid(apiKeyRdsPath)){
-
-  } else {
+  potentialToken <- .getApiKeyIfValid(apiKeyRdsPath)
+  if(is.null(potentialToken)){
     #internal helper function to manage the secrets file
     .readSecretsFile <- function(
 		apiClientIdSecretPath="",
@@ -189,5 +194,6 @@ get.linkedin.access.token <- function(
 		)
 		return(NULL)
 	}
-  }
+  } else {
+	return(unname(potentialToken["accessToken"]))
 }
