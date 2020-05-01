@@ -20,6 +20,52 @@ get.linkedin.access.token <- function(
 	apiClientIdSecretPath="",
 	apiKeyRdsPath=""
 ){
+    .configureForProxy <- function(){
+	currentProxyInfo <- curl::ie_proxy_info()
+	httpTestUrl <- "http://httpbin.org/get"
+	httpsTestUrl <- "https://httpbin.org/get"
+	if(!is.null(currentProxyInfo$Proxy)){
+		# a function to work behind a VPN...
+		# See: https://cran.r-project.org/web/packages/curl/vignettes/windows.html
+		currentProxyInfo <- curl::ie_proxy_info()
+		ieProxies <- strsplit(currentProxyInfo$Proxy,";")
+      		# find the list element that contains https or http 
+		#[ASSUMPTION] currently only works if each http and https only has one value
+		httpsElementNumber <- unlist(lapply(ieProxies, function(ch) grep("https=", ch)))
+		httpElementNumber <- unlist(lapply(ieProxies, function(ch) grep("http=", ch)))
+		httpProxy <- unlist(ieProxies)[httpElementNumber]
+		httpsProxy <- unlist(ieProxies)[httpsElementNumber]
+		httpProxy <- str_replace(httpProxy,"=","://")
+		httpsProxy <- str_replace(httpsProxy,"=","://")
+		#[TODO] if needed use setx to set windows user environment variables?
+		Sys.setenv(http_proxy = httpProxy)
+		Sys.setenv(https_proxy = httpsProxy)
+		#Sys.setenv(ALL_PROXY = httpsProxy)
+		Sys.setenv(NO_PROXY = currentProxyInfo$ProxyBypass)
+		# this is our test that curl is working
+		#[TODO] neet to handle errors durring requests
+		h <- new_handle(proxy = httpProxy, verbose = TRUE)
+		req <- curl_fetch_memory(httpTestUrl, handle = h)
+		# Can't curl a https site, as it returns this error:
+		#Error in curl_fetch_memory("https://httpbin.org/get", handle = h) : 
+		#  Unsupported proxy 'https://NMCIProxyB1Secure:8443', libcurl is built without the HTTPS-proxy support.
+		#h <- new_handle(proxy = httpsProxy, verbose = TRUE)
+		#req <- curl_fetch_memory("https://httpbin.org/get", handle = h)
+			# More Tests
+		httr::set_config(config(ssl_verifypeer = 0L, ssl_verifyhost = 0L))	
+		httr::set_config(config(ssl_options = 1L))
+            httr::set_config(use_proxy(url=httpProxy,port=8080, username=Sys.getenv("username")))
+		request <- httr::GET(httpTestUrl)
+	} else {
+		Sys.setenv(ALL_PROXY = "")
+		Sys.setenv(http_proxy = "")
+		Sys.setenv(https_proxy = "")
+		Sys.setenv(NO_PROXY = "")
+		# Test that curl works
+		request <- httr::GET(httpTestUrl)
+	}
+	return(request$status_code == 200) # && req$status_code == 200 && 
+  }
   .getApiKeyIfValid <- function(apiKeyRdsPath){
 	if(
 		file.exists(apiKeyRdsPath) && 
@@ -148,18 +194,20 @@ get.linkedin.access.token <- function(
 		# }
 		# ---
 		# using httr::POST, alternativly we could use ?RCurl::postForm
-		httr::set_config(config(ssl_verifypeer = 0L, ssl_verifyhost = 0L))
-		httr::set_config(config(ssl_options = 1L))
+		# may or may not need to use set_config
+		# handle proxy if needed
+		.configureForProxy()
+
+		# build form data
 		oauth_params <-  as.list(c(
 			grant_type="client_credentials",
 			client_id=strApiClientID,
 			client_secret=strApiClientSecret
 		))
+		# add headers
 		oauth_header <- "application/x-www-form-urlencoded"
 		names(oauth_header)<- "Content-Type"
 		httr::add_headers(oauth_header)
-		# [TODO] may need to figure out how to use the internet explorer proxies info,
-		# to get this to work behind a VPN...
 		oAuthResponse <- httr::POST(
 			url="https://www.linkedin.com/oauth/v2/accessToken",
 			body=oauth_params,
@@ -194,7 +242,9 @@ get.linkedin.access.token <- function(
 		return(NULL)
 	}
   } else { 
-	#potentialToken is not expired
+	# potentialToken is not expired so let's use it
+	# if we get an error on first use that the token is invalid then
+	# we should delete the apiToken file and call this function again
 	return(unname(potentialToken["accessToken"]))
   }
 }
