@@ -1,3 +1,6 @@
+# If missing then install pacman
+if (!require("pacman")) install.packages("pacman")
+# install and/or load everything else with pacman
 pacman::p_load(httr,jsonlite,getPass,tcltk,curl,RCurl,stringr)
 
 # --- get.linkedin.access.token ---
